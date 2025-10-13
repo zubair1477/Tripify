@@ -16,7 +16,8 @@ export default function LoginScreen({ navigation }: any) {
 
   const handleLogin = () => {
     console.log('Login pressed', { email, password });
-    // Add your login logic here later
+      // Add login logic here
+      navigation.navigate('Onboarding');
   };
 
   return (
