@@ -7,6 +7,7 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import onboarding from './screens/onboarding';
 import QuizScreen from './screens/QuizScreen';
+import ResultsScreen from './screens/ResultsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,7 @@ export default function App() {
           <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="Onboarding" component={onboarding} />
           <Stack.Screen name="Quiz" component={QuizScreen} />
+          <Stack.Screen name="Results" component={ResultsScreen} />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>

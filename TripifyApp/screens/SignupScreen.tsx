@@ -22,7 +22,7 @@ export default function SignupScreen({ navigation }: any) {
       return;
     }
     console.log('Signup pressed', { fullName, email, password });
-    // Add your signup logic here
+    // Add  signup logic here
   };
 
   return (
