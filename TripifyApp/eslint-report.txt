@@ -1,0 +1,140 @@
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/App.tsx
+   2:22  error  'Text' is defined but never used             @typescript-eslint/no-unused-vars
+   2:28  error  'View' is defined but never used             @typescript-eslint/no-unused-vars
+  16:5   error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  17:7   error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  18:9   error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  24:11  error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  25:11  error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  26:11  error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  27:11  error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  28:11  error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  30:9   error  'React' must be in scope when using JSX      react/react-in-jsx-scope
+  36:7   error  'styles' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/screens/LoginScreen.tsx
+  13:53  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  24:5   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  28:7   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  30:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  31:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  32:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  36:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  37:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  47:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  56:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  57:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  60:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  61:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  64:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  65:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  65:48  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  66:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  67:15  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/screens/QuizScreen.tsx
+    6:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:5   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   39:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   40:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   43:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   44:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   56:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   57:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   59:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   61:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   69:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   75:46  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   77:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   84:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   85:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   94:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   99:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  108:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/screens/ResultsScreen.tsx
+   17:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:5   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   49:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   51:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   52:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   53:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   55:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   56:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   62:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   63:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   64:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   65:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   67:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   68:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   69:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   73:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   74:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   80:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   81:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   84:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   85:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   86:17  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   87:17  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   88:19  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   89:19  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   92:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+   99:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  100:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  104:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  109:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  110:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  114:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  117:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  121:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/screens/SignupScreen.tsx
+  13:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:5   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  33:7   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  35:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  36:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  37:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  41:9   error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  42:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  51:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  61:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  70:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  79:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  80:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  83:11  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  84:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  85:13  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+  86:15  error  'React' must be in scope when using JSX   react/react-in-jsx-scope
+
+/Users/cubby/Desktop/Project/programing/Tripify/TripifyApp/screens/onboarding.tsx
+   4:58  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  12:5   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  13:7   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  15:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  16:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  19:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  19:39  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  21:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  26:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  27:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  29:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  30:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  31:15  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  33:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  33:58  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  36:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  37:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  38:15  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  40:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  40:58  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  43:11  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  44:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  45:15  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  47:13  error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  53:7   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+  54:9   error  'React' must be in scope when using JSX                          react/react-in-jsx-scope
+
+✖ 125 problems (125 errors, 0 warnings)
+
