@@ -1,10 +1,18 @@
 from fastapi import APIRouter, HTTPException, status
-from models import UserCreate, UserLogin, UserResponse, QuizAnswers, MoodResult, MoodScores
+from fastapi.responses import RedirectResponse
+from models import (
+    UserCreate, UserLogin, UserResponse, QuizAnswers, MoodResult, MoodScores,
+    SpotifyAuthRequest, SpotifyCallbackRequest, CreatePlaylistRequest
+)
 from database import get_database
 from passlib.context import CryptContext
 from datetime import datetime
 from quiz_data import calculate_mood_scores, QUIZ_QUESTIONS
 from bson import ObjectId
+from spotify_service import (
+    get_spotify_auth_url, get_spotify_client, exchange_code_for_token,
+    get_recommendations, create_playlist
+)
 
 router = APIRouter()
 
@@ -180,3 +188,139 @@ async def get_mood_history(user_id: str):
         })
 
     return {"moodHistory": mood_history}
+
+
+# Spotify Routes
+@router.get("/spotify/auth")
+async def spotify_auth(userId: str):
+    """Get Spotify authorization URL"""
+    try:
+        auth_url = get_spotify_auth_url()
+        # Store userId in database to retrieve after callback
+        db = get_database()
+        spotify_auth_collection = db["spotify_auth_sessions"]
+
+        # Store temporary session
+        await spotify_auth_collection.insert_one({
+            "userId": userId,
+            "createdAt": datetime.utcnow()
+        })
+
+        return {"authUrl": auth_url}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate Spotify auth URL: {str(e)}"
+        )
+
+
+@router.get("/spotify/callback")
+async def spotify_callback(code: str, state: str = None):
+    """Handle Spotify OAuth callback"""
+    try:
+        # Exchange code for access token
+        token_info = exchange_code_for_token(code)
+
+        # For simplicity, redirect to frontend with token
+        # In production, you'd want to store this more securely
+        frontend_url = f"http://localhost:19006/spotify-success?access_token={token_info['access_token']}&refresh_token={token_info.get('refresh_token', '')}"
+
+        return RedirectResponse(url=frontend_url)
+    except Exception as e:
+        error_url = f"http://localhost:19006/spotify-error?error={str(e)}"
+        return RedirectResponse(url=error_url)
+
+
+@router.post("/spotify/generate-playlist")
+async def generate_playlist(request: CreatePlaylistRequest):
+    """Generate playlist recommendations based on mood"""
+    try:
+        # Get Spotify client with access token
+        sp = get_spotify_client(request.accessToken)
+
+        # Get recommendations based on mood
+        tracks = get_recommendations(sp, request.mood)
+
+        return {
+            "tracks": tracks,
+            "mood": request.mood
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate playlist: {str(e)}"
+        )
+
+
+@router.post("/spotify/create-playlist")
+async def create_spotify_playlist(request: CreatePlaylistRequest):
+    """Create playlist on user's Spotify account"""
+    db = get_database()
+    playlists_collection = db["playlists"]
+
+    try:
+        # Get Spotify client
+        sp = get_spotify_client(request.accessToken)
+
+        # Get recommendations
+        tracks = get_recommendations(sp, request.mood)
+
+        # Create playlist on Spotify
+        playlist_info = create_playlist(sp, request.userId, request.mood, tracks)
+
+        # Save playlist to database
+        playlist_doc = {
+            "userId": request.userId,
+            "mood": request.mood,
+            "spotifyPlaylistId": playlist_info["playlist_id"],
+            "playlistName": playlist_info["playlist_name"],
+            "playlistUrl": playlist_info["playlist_url"],
+            "tracksCount": playlist_info["tracks_added"],
+            "tracks": tracks,
+            "createdAt": datetime.utcnow()
+        }
+
+        result = await playlists_collection.insert_one(playlist_doc)
+
+        return {
+            "success": True,
+            "playlistId": str(result.inserted_id),
+            "spotifyPlaylistId": playlist_info["playlist_id"],
+            "playlistUrl": playlist_info["playlist_url"],
+            "playlistName": playlist_info["playlist_name"],
+            "tracksAdded": playlist_info["tracks_added"]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create Spotify playlist: {str(e)}"
+        )
+
+
+@router.get("/spotify/playlists/{user_id}")
+async def get_user_playlists(user_id: str):
+    """Get user's saved playlists"""
+    db = get_database()
+    playlists_collection = db["playlists"]
+
+    try:
+        cursor = playlists_collection.find({"userId": user_id}).sort("createdAt", -1)
+        playlists = await cursor.to_list(length=100)
+
+        result = []
+        for playlist in playlists:
+            result.append({
+                "id": str(playlist["_id"]),
+                "mood": playlist["mood"],
+                "playlistName": playlist["playlistName"],
+                "playlistUrl": playlist["playlistUrl"],
+                "tracksCount": playlist["tracksCount"],
+                "createdAt": playlist["createdAt"]
+            })
+
+        return {"playlists": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch playlists: {str(e)}"
+        )

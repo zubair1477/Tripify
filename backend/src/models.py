@@ -57,3 +57,22 @@ class MoodResult(BaseModel):
     moodScores: MoodScores
     dominantMood: str
     createdAt: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Spotify Models
+class SpotifyAuthRequest(BaseModel):
+    """Schema for requesting Spotify authorization"""
+    userId: str
+
+
+class SpotifyCallbackRequest(BaseModel):
+    """Schema for Spotify OAuth callback"""
+    code: str
+    userId: str
+
+
+class CreatePlaylistRequest(BaseModel):
+    """Schema for creating Spotify playlist"""
+    userId: str
+    mood: str
+    accessToken: str
