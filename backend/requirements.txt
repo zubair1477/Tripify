@@ -2,6 +2,17 @@
 fastapi==0.103.2
 uvicorn==0.23.2
 
+#database
+pymongo==4.7.1
+motor==3.3.1
+
+#authentication
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+
+
+
 # External APIs
 spotipy==2.23.0
 googlemaps==4.10.0

@@ -8,21 +8,76 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+
+const API_URL = 'http://localhost:8000/api/auth';
 
 export default function SignupScreen({ navigation }: any) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignup = () => {
-    if (password !== confirmPassword) {
-      console.log('Passwords do not match!');
+  const handleSignup = async () => {
+    // Validation
+    if (!fullName || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    console.log('Signup pressed', { fullName, email, password });
-    // Add  signup logic here
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match!');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          email: email.toLowerCase().trim(),
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Signup successful
+        console.log('Signup successful:', data);
+        Alert.alert(
+          'Success',
+          'Account created successfully! Please log in.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('Login'),
+            },
+          ]
+        );
+      } else {
+        // Signup failed
+        Alert.alert('Error', data.detail || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      Alert.alert('Error', 'Could not connect to server. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,8 +131,16 @@ export default function SignupScreen({ navigation }: any) {
             secureTextEntry
           />
 
-          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-            <Text style={styles.signupButtonText}>Sign Up</Text>
+          <TouchableOpacity
+            style={[styles.signupButton, loading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.signupButtonText}>Sign Up</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.loginContainer}>
@@ -139,6 +202,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  signupButtonDisabled: {
+    opacity: 0.6,
   },
   loginContainer: {
     flexDirection: 'row',
