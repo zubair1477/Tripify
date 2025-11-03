@@ -45,7 +45,8 @@ export default function LoginScreen({ navigation }: any) {
         // Login successful
         console.log('Login successful:', data);
         Alert.alert('Success', `Welcome back, ${data.fullName}!`);
-        navigation.navigate('Onboarding');
+        // Pass userId to Onboarding screen
+        navigation.navigate('Onboarding', { userId: data.id, userName: data.fullName });
       } else {
         // Login failed
         Alert.alert('Error', data.detail || 'Login failed');

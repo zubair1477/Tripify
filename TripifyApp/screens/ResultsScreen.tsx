@@ -16,6 +16,28 @@ const playlistSongs = [
 
 export default function ResultsScreen({ navigation, route }: any) {
   const answers = route?.params?.answers || {};
+  const moodResult = route?.params?.moodResult;
+
+  // Get mood display text with emoji
+  const getMoodEmoji = (mood: string) => {
+    const moodEmojis: { [key: string]: string } = {
+      energetic: '⚡',
+      calm: '🌊',
+      introspective: '🌙',
+      adventurous: '🗺️'
+    };
+    return moodEmojis[mood.toLowerCase()] || '🎵';
+  };
+
+  const getMoodColor = (mood: string) => {
+    const moodColors: { [key: string]: string } = {
+      energetic: '#FF6B6B',
+      calm: '#4ECDC4',
+      introspective: '#A569BD',
+      adventurous: '#F39C12'
+    };
+    return moodColors[mood.toLowerCase()] || '#3BF664';
+  };
 
   const handleCreatePlaylist = () => {
     Alert.alert(
@@ -44,33 +66,68 @@ export default function ResultsScreen({ navigation, route }: any) {
     // navigation.navigate('Profile'); // still to be created
   };
 
+  const dominantMood = moodResult?.dominantMood || 'energetic';
+  const moodScores = moodResult?.moodScores;
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.resultIcon}>
-            <Text style={styles.resultIconText}>🎵</Text>
+          <View style={[styles.resultIcon, { backgroundColor: getMoodColor(dominantMood) }]}>
+            <Text style={styles.resultIconText}>{getMoodEmoji(dominantMood)}</Text>
           </View>
-          <Text style={styles.title}>Your Perfect Playlist</Text>
+          <Text style={styles.title}>Your {dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1)} Vibe</Text>
           <Text style={styles.subtitle}>
-            Based on your vibe, we have curated these tracks just for you
+            Based on your quiz results, we have curated these tracks just for you
           </Text>
         </View>
+
+        {/* Mood Scores Display */}
+        {moodScores && (
+          <View style={styles.moodScoresCard}>
+            <Text style={styles.moodScoresTitle}>Your Mood Breakdown</Text>
+            {Object.entries(moodScores).map(([mood, score]) => {
+              const scoreValue = typeof score === 'number' ? score : 0;
+              return (
+                <View key={mood} style={styles.moodScoreRow}>
+                  <View style={styles.moodScoreLabel}>
+                    <Text style={styles.moodScoreEmoji}>{getMoodEmoji(mood)}</Text>
+                    <Text style={styles.moodScoreName}>
+                      {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                    </Text>
+                  </View>
+                  <View style={styles.moodScoreBar}>
+                    <View
+                      style={[
+                        styles.moodScoreFill,
+                        {
+                          width: `${scoreValue}%` as any,
+                          backgroundColor: getMoodColor(mood)
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.moodScoreValue}>{scoreValue.toFixed(0)}%</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Playlist Card */}
         <View style={styles.playlistCard}>
           <View style={styles.playlistHeader}>
-            <View style={styles.playlistCover}>
-              <Text style={styles.playlistCoverIcon}>🎶</Text>
+            <View style={[styles.playlistCover, { backgroundColor: getMoodColor(dominantMood) }]}>
+              <Text style={styles.playlistCoverIcon}>{getMoodEmoji(dominantMood)}</Text>
             </View>
             <View style={styles.playlistInfo}>
-              <Text style={styles.playlistName}>Your Vibe Mix</Text>
+              <Text style={styles.playlistName}>Your {dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1)} Mix</Text>
               <Text style={styles.playlistDetails}>
                 {playlistSongs.length} songs • Personalized for you
               </Text>
             </View>
-            <TouchableOpacity style={styles.playButton}>
+            <TouchableOpacity style={[styles.playButton, { backgroundColor: getMoodColor(dominantMood) }]}>
               <View style={styles.playTriangle} />
             </TouchableOpacity>
           </View>
@@ -163,6 +220,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#6B7280',
     paddingHorizontal: 32,
+  },
+  moodScoresCard: {
+    margin: 24,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  moodScoresTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 16,
+  },
+  moodScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  moodScoreLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 140,
+    gap: 8,
+  },
+  moodScoreEmoji: {
+    fontSize: 20,
+  },
+  moodScoreName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  moodScoreBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  moodScoreFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  moodScoreValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    width: 45,
+    textAlign: 'right',
   },
   playlistCard: {
     margin: 24,

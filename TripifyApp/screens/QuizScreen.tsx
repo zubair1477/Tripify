@@ -1,11 +1,16 @@
 // screens/QuizScreen.tsx
 import { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { quizQuestions } from '../Quiz/quiz-data';
+import { calculateMood } from '../services/quizService';
 
-export default function QuizScreen({ navigation }: any) {
+export default function QuizScreen({ navigation, route }: any) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
+  const [loading, setLoading] = useState(false);
+
+  // Get userId from route params (passed from login/signup)
+  const userId = route?.params?.userId;
 
   const question = quizQuestions[currentQuestion];
   const isLastQuestion = currentQuestion === quizQuestions.length - 1;
@@ -15,11 +20,35 @@ export default function QuizScreen({ navigation }: any) {
     setAnswers({ ...answers, [currentQuestion]: optionIndex });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastQuestion) {
-      // Navigate to results screen 
-      console.log('Quiz completed!', answers);
-      navigation.navigate('Results', { answers });
+      // Submit quiz to backend and calculate mood
+      setLoading(true);
+      try {
+        console.log('Submitting quiz answers:', answers);
+
+        const moodResult = await calculateMood({
+          userId: userId || 'guest',
+          answers: answers
+        });
+
+        console.log('Mood calculation result:', moodResult);
+
+        // Navigate to results screen with mood data
+        navigation.navigate('Results', {
+          answers,
+          moodResult
+        });
+      } catch (error) {
+        console.error('Error submitting quiz:', error);
+        Alert.alert(
+          'Error',
+          'Failed to calculate your mood. Please try again.',
+          [{ text: 'OK' }]
+        );
+      } finally {
+        setLoading(false);
+      }
     } else {
       setCurrentQuestion(currentQuestion + 1);
     }
@@ -86,12 +115,12 @@ export default function QuizScreen({ navigation }: any) {
           style={[
             styles.navButton,
             styles.backButton,
-            isFirstQuestion && styles.disabledButton,
+            (isFirstQuestion || loading) && styles.disabledButton,
           ]}
           onPress={handleBack}
-          disabled={isFirstQuestion}
+          disabled={isFirstQuestion || loading}
         >
-          <Text style={[styles.backButtonText, isFirstQuestion && styles.disabledText]}>
+          <Text style={[styles.backButtonText, (isFirstQuestion || loading) && styles.disabledText]}>
             ← Back
           </Text>
         </TouchableOpacity>
@@ -100,14 +129,18 @@ export default function QuizScreen({ navigation }: any) {
           style={[
             styles.navButton,
             styles.nextButton,
-            selectedOption === undefined && styles.disabledButton,
+            (selectedOption === undefined || loading) && styles.disabledButton,
           ]}
           onPress={handleNext}
-          disabled={selectedOption === undefined}
+          disabled={selectedOption === undefined || loading}
         >
-          <Text style={styles.nextButtonText}>
-            {isLastQuestion ? 'Finish' : 'Next →'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.nextButtonText}>
+              {isLastQuestion ? 'Finish' : 'Next →'}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>

@@ -39,5 +39,5 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# Include authentication routes
-app.include_router(router, prefix="/api/auth", tags=["Authentication"])
+# Include all API routes
+app.include_router(router, prefix="/api", tags=["API"])

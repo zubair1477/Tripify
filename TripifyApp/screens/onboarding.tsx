@@ -1,11 +1,15 @@
 // screens/OnboardingScreen.tsx
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 
-export default function OnboardingScreen({ navigation }: any) {
+export default function OnboardingScreen({ navigation, route }: any) {
+  // Get userId from route params
+  const userId = route?.params?.userId;
+  const userName = route?.params?.userName;
+
   const handleNext = () => {
-   
-    console.log('Next button pressed');
-    navigation.navigate('Quiz'); 
+    console.log('Next button pressed, userId:', userId);
+    // Pass userId to Quiz screen
+    navigation.navigate('Quiz', { userId, userName });
   };
 
   return (
