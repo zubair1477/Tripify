@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import connect_to_mongo, close_mongo_connection
-from routes import router
+from .database import connect_to_mongo, close_mongo_connection
+from .routes import router
+
 
 app = FastAPI(title="Tripify API", version="1.0.0")
 

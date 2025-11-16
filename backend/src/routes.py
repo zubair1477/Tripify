@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import RedirectResponse
-from models import (
+from .models import (
     UserCreate, UserLogin, UserResponse, QuizAnswers, MoodResult, MoodScores,
     SpotifyAuthRequest, SpotifyCallbackRequest, CreatePlaylistRequest
 )
-from database import get_database
+from .database import get_database
 from passlib.context import CryptContext
 from datetime import datetime
-from quiz_data import calculate_mood_scores, QUIZ_QUESTIONS
+from .quiz_data import calculate_mood_scores, QUIZ_QUESTIONS
 from bson import ObjectId
-from spotify_service import (
+from .spotify_service import (
     get_spotify_auth_url, get_spotify_client, exchange_code_for_token,
     get_recommendations, create_playlist
 )
