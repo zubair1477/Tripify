@@ -223,7 +223,13 @@ async def spotify_callback(code: str, state: str = None):
 
         # For simplicity, redirect to frontend with token
         # In production, you'd want to store this more securely
-        frontend_url = f"http://localhost:19006/spotify-success?access_token={token_info['access_token']}&refresh_token={token_info.get('refresh_token', '')}"
+        frontend_url = (
+            f"http://localhost:8081/SpotifySuccess?"
+            f"access_token={token_info['access_token']}&"
+            f"refresh_token={token_info.get('refresh_token', '')}"
+        )
+
+
 
         return RedirectResponse(url=frontend_url)
     except Exception as e:

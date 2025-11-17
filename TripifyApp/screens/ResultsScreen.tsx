@@ -1,4 +1,6 @@
 // screens/ResultsScreen.tsx
+
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -7,100 +9,78 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { Linking } from "react-native"; // <-- required for opening URLs
-
-const playlistSongs = [
-  {
-    id: 1,
-    title: "Placeholder Song 1",
-    artist: "Placeholder Artist",
-    duration: "3:45",
-  },
-  {
-    id: 2,
-    title: "Placeholder Song 2",
-    artist: "Placeholder Artist",
-    duration: "4:12",
-  },
-  {
-    id: 3,
-    title: "Placeholder Song 3",
-    artist: "Placeholder Artist",
-    duration: "3:28",
-  },
-  {
-    id: 4,
-    title: "Placeholder Song 4",
-    artist: "Placeholder Artist",
-    duration: "4:01",
-  },
-  {
-    id: 5,
-    title: "Placeholder Song 5",
-    artist: "Placeholder Artist",
-    duration: "3:56",
-  },
-  {
-    id: 6,
-    title: "Placeholder Song 6",
-    artist: "Placeholder Artist",
-    duration: "4:23",
-  },
-  {
-    id: 7,
-    title: "Placeholder Song 7",
-    artist: "Placeholder Artist",
-    duration: "3:34",
-  },
-  {
-    id: 8,
-    title: "Placeholder Song 8",
-    artist: "Placeholder Artist",
-    duration: "4:18",
-  },
-  {
-    id: 9,
-    title: "Placeholder Song 9",
-    artist: "Placeholder Artist",
-    duration: "3:52",
-  },
-  {
-    id: 10,
-    title: "Placeholder Song 10",
-    artist: "Placeholder Artist",
-    duration: "4:05",
-  },
-];
+import { Linking } from "react-native";
 
 export default function ResultsScreen({ navigation, route }: any) {
   const answers = route?.params?.answers || {};
   const moodResult = route?.params?.moodResult;
   const userId = route?.params?.userId;
 
-  const getMoodEmoji = (mood: string) => {
-    const moodEmojis: { [key: string]: string } = {
-      energetic: "⚡",
-      calm: "🌊",
-      introspective: "🌙",
-      adventurous: "🗺️",
-    };
-    return moodEmojis[mood.toLowerCase()] || "🎵";
+  // Spotify Token passed from SpotifySuccessScreen
+  const spotifyAccessToken = route?.params?.spotifyAccessToken || null;
+
+  const dominantMood = moodResult?.dominantMood || "energetic";
+
+  // Real playlist songs from backend
+  const [songs, setSongs] = useState<any[]>([]);
+  const [loadingSongs, setLoadingSongs] = useState(false);
+
+  console.log("RESULTS SCREEN TOKEN:", spotifyAccessToken);
+
+  // -------------------------------------------------------------
+  // IF TOKEN EXISTS → FETCH REAL SONGS FROM BACKEND
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (!spotifyAccessToken) {
+      console.log("No Spotify token yet.");
+      return;
+    }
+
+    console.log("Fetching real playlist...");
+    fetchRealSpotifyPlaylist();
+  }, [spotifyAccessToken]);
+
+  // -------------------------------------------------------------
+  // Fetch Recommendations
+  // -------------------------------------------------------------
+  const fetchRealSpotifyPlaylist = async () => {
+    try {
+      setLoadingSongs(true);
+
+      const response = await fetch(
+        "http://localhost:8000/api/spotify/generate-playlist",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accessToken: spotifyAccessToken,
+            mood: dominantMood,
+            userId: userId || "guest",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.tracks || data.tracks.length === 0) {
+        Alert.alert("Error", "No tracks returned.");
+        setLoadingSongs(false);
+        return;
+      }
+
+      console.log("REAL TRACKS:", data.tracks);
+      setSongs(data.tracks);
+    } catch (err) {
+      console.log("Playlist generation error:", err);
+      Alert.alert("Error", "Failed to load Spotify playlist.");
+    } finally {
+      setLoadingSongs(false);
+    }
   };
 
-  const getMoodColor = (mood: string) => {
-    const moodColors: { [key: string]: string } = {
-      energetic: "#FF6B6B",
-      calm: "#4ECDC4",
-      introspective: "#A569BD",
-      adventurous: "#F39C12",
-    };
-    return moodColors[mood.toLowerCase()] || "#3BF664";
-  };
-
-  /***
-   * SPOTIFY LOGIN HANDLER
-   * Calls backend → gets Spotify auth URL → opens login screen
-   */
+  // -------------------------------------------------------------
+  // 3️⃣ Spotify Login Handler
+  // -------------------------------------------------------------
   const handleSpotifyLogin = async () => {
     try {
       const res = await fetch(
@@ -111,7 +91,7 @@ export default function ResultsScreen({ navigation, route }: any) {
       if (data.authUrl) {
         Linking.openURL(data.authUrl);
       } else {
-        Alert.alert("Error", "No Spotify authorization URL was returned.");
+        Alert.alert("Error", "No Spotify authorization URL returned.");
       }
     } catch (error) {
       console.log("Spotify login error:", error);
@@ -119,16 +99,27 @@ export default function ResultsScreen({ navigation, route }: any) {
     }
   };
 
-  const handleCreateNewPlaylist = () => {
-    navigation.navigate("Onboarding");
+  const handleCreateNewPlaylist = () => navigation.navigate("Onboarding");
+
+  const getMoodEmoji = (mood: string) => {
+    const moodEmojis: any = {
+      energetic: "⚡",
+      calm: "🌊",
+      introspective: "🌙",
+      adventurous: "🗺️",
+    };
+    return moodEmojis[mood] || "🎵";
   };
 
-  const handleGoToProfile = () => {
-    console.log("Navigate to profile (to be created)");
+  const getMoodColor = (mood: string) => {
+    const moodColors: any = {
+      energetic: "#FF6B6B",
+      calm: "#4ECDC4",
+      introspective: "#A569BD",
+      adventurous: "#F39C12",
+    };
+    return moodColors[mood] || "#3BF664";
   };
-
-  const dominantMood = moodResult?.dominantMood || "energetic";
-  const moodScores = moodResult?.moodScores;
 
   return (
     <View style={styles.container}>
@@ -145,57 +136,18 @@ export default function ResultsScreen({ navigation, route }: any) {
               {getMoodEmoji(dominantMood)}
             </Text>
           </View>
+
           <Text style={styles.title}>
             Your {dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1)}{" "}
             Vibe
           </Text>
+
           <Text style={styles.subtitle}>
-            Based on your quiz results, we have curated these tracks just for
-            you
+            Based on your quiz, we curated these tracks just for you.
           </Text>
         </View>
 
-        {/* Mood Scores */}
-        {moodScores && (
-          <View style={styles.moodScoresCard}>
-            <Text style={styles.moodScoresTitle}>Your Mood Breakdown</Text>
-
-            {Object.entries(moodScores).map(([mood, score]) => {
-              const scoreValue = typeof score === "number" ? score : 0;
-
-              return (
-                <View key={mood} style={styles.moodScoreRow}>
-                  <View style={styles.moodScoreLabel}>
-                    <Text style={styles.moodScoreEmoji}>
-                      {getMoodEmoji(mood)}
-                    </Text>
-                    <Text style={styles.moodScoreName}>
-                      {mood.charAt(0).toUpperCase() + mood.slice(1)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.moodScoreBar}>
-                    <View
-                      style={[
-                        styles.moodScoreFill,
-                        {
-                          width: `${scoreValue}%`,
-                          backgroundColor: getMoodColor(mood),
-                        },
-                      ]}
-                    />
-                  </View>
-
-                  <Text style={styles.moodScoreValue}>
-                    {scoreValue.toFixed(0)}%
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Playlist Card */}
+        {/* Playlist Section */}
         <View style={styles.playlistCard}>
           <View style={styles.playlistHeader}>
             <View
@@ -210,51 +162,58 @@ export default function ResultsScreen({ navigation, route }: any) {
             </View>
 
             <View style={styles.playlistInfo}>
-              <Text style={styles.playlistName}>
-                Your{" "}
-                {dominantMood.charAt(0).toUpperCase() + dominantMood.slice(1)}{" "}
-                Mix
-              </Text>
+              <Text style={styles.playlistName}>Your {dominantMood} Mix</Text>
               <Text style={styles.playlistDetails}>
-                {playlistSongs.length} songs • Personalized for you
+                {songs.length > 0 ? songs.length : 10} songs • Personalized
               </Text>
             </View>
-
-            <TouchableOpacity
-              style={[
-                styles.playButton,
-                { backgroundColor: getMoodColor(dominantMood) },
-              ]}
-            >
-              <View style={styles.playTriangle} />
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Song List */}
+        {/* Tracks Section */}
         <View style={styles.songsSection}>
           <Text style={styles.sectionTitle}>Tracks</Text>
 
-          {playlistSongs.map((song, index) => (
-            <View key={song.id} style={styles.songItem}>
-              <View style={styles.songLeft}>
-                <Text style={styles.songNumber}>{index + 1}</Text>
+          {/* Loading Spinner */}
+          {loadingSongs && (
+            <Text style={{ textAlign: "center", paddingVertical: 20 }}>
+              Loading Spotify songs...
+            </Text>
+          )}
 
-                <View style={styles.songInfo}>
-                  <Text style={styles.songTitle}>{song.title}</Text>
-                  <Text style={styles.songArtist}>{song.artist}</Text>
+          {/* Show REAL SONGS */}
+          {!loadingSongs &&
+            songs.length > 0 &&
+            songs.map((track: any, index: number) => (
+              <View key={index} style={styles.songItem}>
+                <View style={styles.songLeft}>
+                  <Text style={styles.songNumber}>{index + 1}</Text>
+
+                  <View style={styles.songInfo}>
+                    <Text style={styles.songTitle}>{track.name}</Text>
+                    <Text style={styles.songArtist}>
+                      {track.artists?.join(", ")}
+                    </Text>
+                  </View>
                 </View>
-              </View>
 
-              <Text style={styles.songDuration}>{song.duration}</Text>
-            </View>
-          ))}
+                <Text style={styles.songDuration}>
+                  {track.duration || "3:30"}
+                </Text>
+              </View>
+            ))}
+
+          {/* If no Spotify: show placeholder */}
+          {!spotifyAccessToken && songs.length === 0 && (
+            <Text style={{ textAlign: "center", marginTop: 20 }}>
+              Connect Spotify to load your playlist.
+            </Text>
+          )}
         </View>
       </ScrollView>
 
       {/* Footer */}
       <View style={styles.footer}>
-        {/* CONNECT SPOTIFY BUTTON */}
         <TouchableOpacity
           style={styles.createButton}
           onPress={handleSpotifyLogin}
@@ -270,10 +229,7 @@ export default function ResultsScreen({ navigation, route }: any) {
             <Text style={styles.actionButtonText}>🔄 New Playlist</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleGoToProfile}
-          >
+          <TouchableOpacity style={styles.actionButton}>
             <Text style={styles.actionButtonText}>👤 Profile</Text>
           </TouchableOpacity>
         </View>
@@ -282,6 +238,7 @@ export default function ResultsScreen({ navigation, route }: any) {
   );
 }
 
+// ---------- STYLES ----------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   content: { flex: 1 },
@@ -308,49 +265,6 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     paddingHorizontal: 32,
   },
-  moodScoresCard: {
-    margin: 24,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  moodScoresTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  moodScoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 8,
-  },
-  moodScoreLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: 140,
-    gap: 8,
-  },
-  moodScoreEmoji: { fontSize: 20 },
-  moodScoreName: { fontSize: 14, fontWeight: "500" },
-  moodScoreBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  moodScoreFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  moodScoreValue: {
-    width: 45,
-    textAlign: "right",
-    fontSize: 14,
-    fontWeight: "600",
-  },
   playlistCard: {
     margin: 24,
     padding: 16,
@@ -375,24 +289,6 @@ const styles = StyleSheet.create({
   playlistInfo: { flex: 1 },
   playlistName: { fontSize: 18, fontWeight: "600" },
   playlistDetails: { color: "#6B7280", fontSize: 12 },
-  playButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  playTriangle: {
-    width: 0,
-    height: 0,
-    marginLeft: 4,
-    borderLeftWidth: 14,
-    borderTopWidth: 10,
-    borderBottomWidth: 10,
-    borderLeftColor: "#FFFFFF",
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-  },
   songsSection: { padding: 24 },
   sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16 },
   songItem: {
