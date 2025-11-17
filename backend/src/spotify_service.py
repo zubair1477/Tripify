@@ -15,7 +15,8 @@ SPOTIFY_SCOPES = (
     "playlist-modify-public "
     "playlist-modify-private "
     "user-read-email "
-    "user-read-private"
+    "user-read-private "
+    "user-top-read"
 )
 
 
@@ -47,7 +48,7 @@ def get_spotify_client(access_token: str):
 
 
 # -------------------------------------------------------------
-# VALID SPOTIFY GENRES
+# VALID SPOTIFY GENRES AND MOOD PARAMETERS
 # -------------------------------------------------------------
 MOOD_GENRES = {
     "energetic": ["dance", "edm", "party", "power-pop"],
@@ -56,35 +57,117 @@ MOOD_GENRES = {
     "adventurous": ["alternative", "indie", "world-music", "latin"],
 }
 
+# Audio features based on mood
+MOOD_AUDIO_FEATURES = {
+    "energetic": {
+        "target_energy": 0.8,
+        "min_tempo": 120,
+        "target_valence": 0.7,
+    },
+    "calm": {
+        "target_energy": 0.3,
+        "max_tempo": 100,
+        "target_valence": 0.5,
+    },
+    "introspective": {
+        "target_energy": 0.4,
+        "max_tempo": 110,
+        "min_valence": 0.2,
+        "max_valence": 0.6,
+    },
+    "adventurous": {
+        "target_energy": 0.6,
+        "min_tempo": 100,
+        "target_valence": 0.6,
+    },
+}
+
 # -------------------------------------------------------------
 # GET RECOMMENDATIONS
 # -------------------------------------------------------------
 def get_recommendations(sp, mood: str, limit: int = 20):
-    """Get track recommendations using 1 seed artist (Spotipy-safe)."""
+    """
+    Get personalized playlist based on mood using user's top tracks.
 
-    MOOD_ARTISTS = {
-        "energetic": "4NHQUGzhtTLFvgF5SZesLK",       # Dua Lipa
-        "calm": "6Q192DXotxtaysaqNPy5yR",            # Norah Jones
-        "introspective": "7oPftvlwr6VrsViSDV7fJY",   # Radiohead
-        "adventurous": "3WrFJ7ztbogyGnTHbHJFl2",     # The Beatles
-    }
+    NOTE: Spotify deprecated the /recommendations and restricted /audio-features endpoints
+    in Nov 2024 for new apps. This function now creates playlists directly from user's
+    top tracks based on the selected time range that best matches the mood.
+    """
 
     mood = mood.lower()
 
-    seed_artist = MOOD_ARTISTS.get(mood, "4NHQUGzhtTLFvgF5SZesLK")
+    print(f"\n=== Creating '{mood}' playlist from user's favorite tracks ===")
+
+    # Map moods to time ranges for variety
+    # - Energetic: Recent tracks (user's current energy)
+    # - Calm: Long-term favorites (comfort/familiarity)
+    # - Introspective: Medium-term (reflective period)
+    # - Adventurous: Mix of short and long-term
+
+    mood_time_ranges = {
+        "energetic": "short_term",      # Last ~4 weeks
+        "calm": "long_term",             # All-time favorites
+        "introspective": "medium_term",  # Last ~6 months
+        "adventurous": "short_term",     # Recent discoveries
+    }
+
+    time_range = mood_time_ranges.get(mood, "medium_term")
+
+    # Fetch more tracks than we need to ensure variety
+    fetch_limit = min(limit * 2, 50)  # Spotify max is 50
 
     try:
-        recs = sp.recommendations(
-            seed_artists=[seed_artist],   # ⭐ ONLY ONE SEED
-            limit=limit,
-            market="US"
-        )
+        print(f"Fetching top {fetch_limit} tracks from {time_range} listening history...")
+        response = sp.current_user_top_tracks(limit=fetch_limit, time_range=time_range)
+        tracks_data = response.get("items", [])
+        print(f"✓ Found {len(tracks_data)} tracks")
     except Exception as e:
-        print("Spotify recommendation error:", e)
+        print(f"✗ Error fetching tracks: {e}")
+        # Fallback to medium-term if primary fails
+        try:
+            print("Trying fallback to medium-term...")
+            response = sp.current_user_top_tracks(limit=fetch_limit, time_range="medium_term")
+            tracks_data = response.get("items", [])
+            print(f"✓ Fallback successful! Found {len(tracks_data)} tracks")
+        except Exception as fallback_error:
+            print(f"✗ Fallback failed: {fallback_error}")
+            return []
+
+    if not tracks_data:
+        print("✗ No tracks found in user's listening history")
         return []
 
+    # Add some variety based on mood
+    # For adventurous mood, also mix in some long-term favorites
+    if mood == "adventurous" and len(tracks_data) < limit:
+        try:
+            print("Adding variety from long-term favorites...")
+            long_term_response = sp.current_user_top_tracks(limit=20, time_range="long_term")
+            long_term_tracks = long_term_response.get("items", [])
+
+            # Add tracks that aren't already in the list
+            existing_ids = {t["id"] for t in tracks_data}
+            for track in long_term_tracks:
+                if track["id"] not in existing_ids:
+                    tracks_data.append(track)
+                    existing_ids.add(track["id"])
+
+            print(f"✓ Added variety tracks. Total: {len(tracks_data)}")
+        except Exception as e:
+            print(f"Note: Could not add variety tracks: {e}")
+
+    # Shuffle for variety (deterministic based on mood)
+    import random
+    random.seed(hash(mood))  # Same mood = same shuffle order for consistency
+    shuffled = tracks_data.copy()
+    random.shuffle(shuffled)
+
+    # Select the requested number of tracks
+    selected = shuffled[:limit]
+
+    # Format tracks
     tracks = []
-    for t in recs.get("tracks", []):
+    for t in selected:
         tracks.append({
             "id": t["id"],
             "name": t["name"],
@@ -92,10 +175,10 @@ def get_recommendations(sp, mood: str, limit: int = 20):
             "duration": round(t["duration_ms"] / 60000, 2),
             "preview_url": t.get("preview_url"),
             "uri": t["uri"],
-            "image": t["album"]["images"][0]["url"]
-            if t["album"]["images"] else None
+            "image": t["album"]["images"][0]["url"] if t["album"]["images"] else None
         })
 
+    print(f"✓ Created playlist with {len(tracks)} tracks for '{mood}' mood\n")
     return tracks
 
 
