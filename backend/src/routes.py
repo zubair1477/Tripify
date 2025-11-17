@@ -192,17 +192,18 @@ async def get_mood_history(user_id: str):
 
 # Spotify Routes
 @router.get("/spotify/auth")
-async def spotify_auth(userId: str):
+async def spotify_auth(userId: str, mood: str = "energetic"):
     """Get Spotify authorization URL"""
     try:
         auth_url = get_spotify_auth_url()
-        # Store userId in database to retrieve after callback
+        # Store userId AND mood in database to retrieve after callback
         db = get_database()
         spotify_auth_collection = db["spotify_auth_sessions"]
 
-        # Store temporary session
+        # Store temporary session with mood
         await spotify_auth_collection.insert_one({
             "userId": userId,
+            "mood": mood,
             "createdAt": datetime.utcnow()
         })
 
@@ -221,15 +222,32 @@ async def spotify_callback(code: str, state: str = None):
         # Exchange code for access token
         token_info = exchange_code_for_token(code)
 
-        # For simplicity, redirect to frontend with token
-        # In production, you'd want to store this more securely
+        # Retrieve the most recent auth session to get mood and userId
+        db = get_database()
+        spotify_auth_collection = db["spotify_auth_sessions"]
+
+        # Get the most recent session (within last 10 minutes)
+        from datetime import timedelta
+        cutoff_time = datetime.utcnow() - timedelta(minutes=10)
+        session = await spotify_auth_collection.find_one(
+            {"createdAt": {"$gte": cutoff_time}},
+            sort=[("createdAt", -1)]
+        )
+
+        mood = session.get("mood", "energetic") if session else "energetic"
+        user_id = session.get("userId", "guest") if session else "guest"
+
+        # Clean up old sessions
+        await spotify_auth_collection.delete_many({"createdAt": {"$lt": cutoff_time}})
+
+        # For simplicity, redirect to frontend with token AND mood
         frontend_url = (
             f"http://localhost:8081/SpotifySuccess?"
             f"access_token={token_info['access_token']}&"
-            f"refresh_token={token_info.get('refresh_token', '')}"
+            f"refresh_token={token_info.get('refresh_token', '')}&"
+            f"mood={mood}&"
+            f"userId={user_id}"
         )
-
-
 
         return RedirectResponse(url=frontend_url)
     except Exception as e:
@@ -294,7 +312,8 @@ async def create_spotify_playlist(request: CreatePlaylistRequest):
             "spotifyPlaylistId": playlist_info["playlist_id"],
             "playlistUrl": playlist_info["playlist_url"],
             "playlistName": playlist_info["playlist_name"],
-            "tracksAdded": playlist_info["tracks_added"]
+            "tracksAdded": playlist_info["tracks_added"],
+            "tracks": tracks  # Include tracks for UI display
         }
     except Exception as e:
         raise HTTPException(

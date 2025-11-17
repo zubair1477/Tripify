@@ -6,24 +6,30 @@ import { useNavigation } from "@react-navigation/native";
 export default function SpotifySuccessScreen() {
   const navigation = useNavigation();
 
-  const extractTokenFromUrl = () => {
+  const extractDataFromUrl = () => {
     const url = window.location.href;
     const params = new URLSearchParams(url.split("?")[1]);
 
     return {
       accessToken: params.get("access_token"),
       refreshToken: params.get("refresh_token"),
+      mood: params.get("mood"),
+      userId: params.get("userId"),
     };
   };
 
   useEffect(() => {
-    const { accessToken, refreshToken } = extractTokenFromUrl();
+    const { accessToken, refreshToken, mood, userId } = extractDataFromUrl();
+
+    console.log("Spotify callback data:", { accessToken: !!accessToken, mood, userId });
 
     if (accessToken) {
-      // Navigate back to Results with token
+      // Navigate back to Results with all data from backend
       navigation.navigate("Results", {
         spotifyAccessToken: accessToken,
         spotifyRefreshToken: refreshToken,
+        moodResult: { dominantMood: mood || 'energetic' },
+        userId: userId || 'guest',
       });
     }
   }, []);

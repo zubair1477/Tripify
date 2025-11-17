@@ -19,13 +19,25 @@ export default function ResultsScreen({ navigation, route }: any) {
   // Spotify Token passed from SpotifySuccessScreen
   const spotifyAccessToken = route?.params?.spotifyAccessToken || null;
 
-  const dominantMood = moodResult?.dominantMood || "energetic";
-
   // Real playlist songs from backend
   const [songs, setSongs] = useState<any[]>([]);
   const [loadingSongs, setLoadingSongs] = useState(false);
+  const [playlistUrl, setPlaylistUrl] = useState<string | null>(null);
 
-  console.log("RESULTS SCREEN TOKEN:", spotifyAccessToken);
+  // Store the mood locally so it persists across navigation
+  const [storedMood, setStoredMood] = useState<string | null>(null);
+
+  // Set mood when component receives it
+  useEffect(() => {
+    if (moodResult?.dominantMood) {
+      setStoredMood(moodResult.dominantMood);
+      console.log("Stored mood:", moodResult.dominantMood);
+    }
+  }, [moodResult]);
+
+  const dominantMood = storedMood || moodResult?.dominantMood || "energetic";
+
+  console.log("RESULTS SCREEN - Mood:", dominantMood, "Token:", spotifyAccessToken);
 
   // -------------------------------------------------------------
   // IF TOKEN EXISTS → FETCH REAL SONGS FROM BACKEND
@@ -41,14 +53,14 @@ export default function ResultsScreen({ navigation, route }: any) {
   }, [spotifyAccessToken]);
 
   // -------------------------------------------------------------
-  // Fetch Recommendations
+  // Create Playlist on Spotify
   // -------------------------------------------------------------
   const fetchRealSpotifyPlaylist = async () => {
     try {
       setLoadingSongs(true);
 
       const response = await fetch(
-        "http://localhost:8000/api/spotify/generate-playlist",
+        "http://localhost:8000/api/spotify/create-playlist",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -62,17 +74,33 @@ export default function ResultsScreen({ navigation, route }: any) {
 
       const data = await response.json();
 
-      if (!data.tracks || data.tracks.length === 0) {
-        Alert.alert("Error", "No tracks returned.");
+      if (!data.success) {
+        Alert.alert("Error", "Failed to create playlist on Spotify.");
         setLoadingSongs(false);
         return;
       }
 
-      console.log("REAL TRACKS:", data.tracks);
-      setSongs(data.tracks);
+      console.log("PLAYLIST CREATED:", data);
+      console.log("Spotify URL:", data.playlistUrl);
+
+      // Set the tracks for display
+      setPlaylistUrl(data.playlistUrl);
+      setSongs(data.tracks || []);
+
+      Alert.alert(
+        "Success! 🎉",
+        `Playlist "${data.playlistName}" created with ${data.tracksAdded} tracks!\n\nCheck your Spotify app to listen.`,
+        [
+          {
+            text: "Open in Spotify",
+            onPress: () => Linking.openURL(data.playlistUrl),
+          },
+          { text: "OK" },
+        ]
+      );
     } catch (err) {
-      console.log("Playlist generation error:", err);
-      Alert.alert("Error", "Failed to load Spotify playlist.");
+      console.log("Playlist creation error:", err);
+      Alert.alert("Error", "Failed to create Spotify playlist.");
     } finally {
       setLoadingSongs(false);
     }
@@ -83,8 +111,11 @@ export default function ResultsScreen({ navigation, route }: any) {
   // -------------------------------------------------------------
   const handleSpotifyLogin = async () => {
     try {
+      console.log("Starting Spotify auth with mood:", dominantMood);
+
+      // Pass mood to backend so it can be retrieved after auth
       const res = await fetch(
-        `http://localhost:8000/api/spotify/auth?userId=${userId}`
+        `http://localhost:8000/api/spotify/auth?userId=${userId}&mood=${dominantMood}`
       );
       const data = await res.json();
 
