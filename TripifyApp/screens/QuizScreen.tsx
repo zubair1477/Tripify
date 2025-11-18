@@ -1,8 +1,16 @@
 // screens/QuizScreen.tsx
-import { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { quizQuestions } from '../Quiz/quiz-data';
-import { calculateMood } from '../services/quizService';
+import { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { quizQuestions } from "../Quiz/quiz-data";
+import { calculateMood } from "../services/quizService";
 
 export default function QuizScreen({ navigation, route }: any) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -25,26 +33,27 @@ export default function QuizScreen({ navigation, route }: any) {
       // Submit quiz to backend and calculate mood
       setLoading(true);
       try {
-        console.log('Submitting quiz answers:', answers);
+        console.log("Submitting quiz answers:", answers);
 
         const moodResult = await calculateMood({
-          userId: userId || 'guest',
-          answers: answers
+          userId: userId || "guest",
+          answers: answers,
         });
 
-        console.log('Mood calculation result:', moodResult);
+        console.log("Mood calculation result:", moodResult);
 
         // Navigate to results screen with mood data
-        navigation.navigate('Results', {
+        navigation.navigate("Results", {
           answers,
-          moodResult
+          moodResult,
+          userId: userId || "guest",
         });
       } catch (error) {
-        console.error('Error submitting quiz:', error);
+        console.error("Error submitting quiz:", error);
         Alert.alert(
-          'Error',
-          'Failed to calculate your mood. Please try again.',
-          [{ text: 'OK' }]
+          "Error",
+          "Failed to calculate your mood. Please try again.",
+          [{ text: "OK" }]
         );
       } finally {
         setLoading(false);
@@ -74,7 +83,9 @@ export default function QuizScreen({ navigation, route }: any) {
             style={[
               styles.progressFill,
               {
-                width: `${((currentQuestion + 1) / quizQuestions.length) * 100}%`,
+                width: `${
+                  ((currentQuestion + 1) / quizQuestions.length) * 100
+                }%`,
               },
             ]}
           />
@@ -120,7 +131,12 @@ export default function QuizScreen({ navigation, route }: any) {
           onPress={handleBack}
           disabled={isFirstQuestion || loading}
         >
-          <Text style={[styles.backButtonText, (isFirstQuestion || loading) && styles.disabledText]}>
+          <Text
+            style={[
+              styles.backButtonText,
+              (isFirstQuestion || loading) && styles.disabledText,
+            ]}
+          >
             ← Back
           </Text>
         </TouchableOpacity>
@@ -138,7 +154,7 @@ export default function QuizScreen({ navigation, route }: any) {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.nextButtonText}>
-              {isLastQuestion ? 'Finish' : 'Next →'}
+              {isLastQuestion ? "Finish" : "Next →"}
             </Text>
           )}
         </TouchableOpacity>
@@ -150,7 +166,7 @@ export default function QuizScreen({ navigation, route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   header: {
     padding: 24,
@@ -158,18 +174,18 @@ const styles = StyleSheet.create({
   },
   questionNumber: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
     marginBottom: 12,
   },
   progressBar: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: "#E5E7EB",
     borderRadius: 2,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
-    backgroundColor: '#3BF664',
+    height: "100%",
+    backgroundColor: "#3BF664",
     borderRadius: 2,
   },
   content: {
@@ -178,8 +194,8 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontWeight: "bold",
+    color: "#1F2937",
     marginBottom: 32,
     lineHeight: 36,
   },
@@ -188,77 +204,77 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderRadius: 12,
     gap: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   optionButtonSelected: {
-    borderColor: '#3BF664',
+    borderColor: "#3BF664",
     borderWidth: 2,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: "#F0FDF4",
   },
   radioCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
   },
   radioCircleSelected: {
-    borderColor: '#3BF664',
+    borderColor: "#3BF664",
   },
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#3BF664',
+    backgroundColor: "#3BF664",
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
+    color: "#1F2937",
   },
   navigationButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 24,
     gap: 12,
   },
   navButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
   },
   backButton: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   backButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
   },
   nextButton: {
-    backgroundColor: '#3BF664',
+    backgroundColor: "#3BF664",
   },
   nextButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   disabledButton: {
     opacity: 0.5,
   },
   disabledText: {
-    color: '#9CA3AF',
+    color: "#9CA3AF",
   },
 });

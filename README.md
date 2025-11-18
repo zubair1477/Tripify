@@ -71,8 +71,8 @@ You need to run both the backend and frontend simultaneously in separate termina
 ### Terminal 1: Start the Backend
 
 ```bash
-cd backend/src
-uvicorn main:app --reload --port 8000
+cd backend
+uvicorn src.main:app --reload --port 8000
 ```
 
 You should see:

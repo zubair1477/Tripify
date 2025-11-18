@@ -10,8 +10,14 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 
-# Scopes needed for creating playlists
-SPOTIFY_SCOPES = "playlist-modify-public playlist-modify-private user-library-read"
+# Required scopes
+SPOTIFY_SCOPES = (
+    "playlist-modify-public "
+    "playlist-modify-private "
+    "user-read-email "
+    "user-read-private "
+    "user-top-read"
+)
 
 
 def get_spotify_auth_url():
@@ -23,8 +29,17 @@ def get_spotify_auth_url():
         scope=SPOTIFY_SCOPES,
         show_dialog=True
     )
-    auth_url = sp_oauth.get_authorize_url()
-    return auth_url
+    return sp_oauth.get_authorize_url()
+
+
+def exchange_code_for_token(code: str):
+    sp_oauth = SpotifyOAuth(
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET,
+        redirect_uri=SPOTIFY_REDIRECT_URI,
+        scope=SPOTIFY_SCOPES
+    )
+    return sp_oauth.get_access_token(code, as_dict=True)
 
 
 def get_spotify_client(access_token: str):
@@ -32,128 +47,171 @@ def get_spotify_client(access_token: str):
     return spotipy.Spotify(auth=access_token)
 
 
-def exchange_code_for_token(code: str):
-    """Exchange authorization code for access token"""
-    sp_oauth = SpotifyOAuth(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=SPOTIFY_REDIRECT_URI,
-        scope=SPOTIFY_SCOPES
-    )
-    token_info = sp_oauth.get_access_token(code, as_dict=True)
-    return token_info
+# -------------------------------------------------------------
+# VALID SPOTIFY GENRES AND MOOD PARAMETERS
+# -------------------------------------------------------------
+MOOD_GENRES = {
+    "energetic": ["dance", "edm", "party", "power-pop"],
+    "calm": ["chill", "acoustic", "ambient", "piano"],
+    "introspective": ["focus", "study", "sleep", "indie-pop"],
+    "adventurous": ["alternative", "indie", "world-music", "latin"],
+}
 
+# Audio features based on mood
+MOOD_AUDIO_FEATURES = {
+    "energetic": {
+        "target_energy": 0.8,
+        "min_tempo": 120,
+        "target_valence": 0.7,
+    },
+    "calm": {
+        "target_energy": 0.3,
+        "max_tempo": 100,
+        "target_valence": 0.5,
+    },
+    "introspective": {
+        "target_energy": 0.4,
+        "max_tempo": 110,
+        "min_valence": 0.2,
+        "max_valence": 0.6,
+    },
+    "adventurous": {
+        "target_energy": 0.6,
+        "min_tempo": 100,
+        "target_valence": 0.6,
+    },
+}
 
-def search_tracks_by_mood(mood: str, limit: int = 20):
-    """
-    Search for tracks based on mood
-
-    Mood to genre/audio features mapping:
-    - energetic: high energy, fast tempo, danceable
-    - calm: low energy, slow tempo, acoustic
-    - introspective: medium energy, emotional, indie/alternative
-    - adventurous: diverse genres, upbeat, world music
-    """
-    mood_to_search = {
-        "energetic": {
-            "genres": ["pop", "dance", "electronic", "rock"],
-            "energy_min": 0.7,
-            "tempo_min": 120,
-            "valence_min": 0.6
-        },
-        "calm": {
-            "genres": ["ambient", "acoustic", "chill", "lo-fi"],
-            "energy_max": 0.5,
-            "tempo_max": 100,
-            "valence_min": 0.3
-        },
-        "introspective": {
-            "genres": ["indie", "alternative", "folk", "singer-songwriter"],
-            "energy_min": 0.3,
-            "energy_max": 0.7,
-            "valence_max": 0.6
-        },
-        "adventurous": {
-            "genres": ["world", "latin", "afrobeat", "reggae"],
-            "energy_min": 0.6,
-            "tempo_min": 100
-        }
-    }
-
-    return mood_to_search.get(mood.lower(), mood_to_search["energetic"])
-
-
+# -------------------------------------------------------------
+# GET RECOMMENDATIONS
+# -------------------------------------------------------------
 def get_recommendations(sp, mood: str, limit: int = 20):
-    """Get track recommendations based on mood"""
-    mood_config = search_tracks_by_mood(mood)
+    """
+    Get personalized playlist based on mood using user's top tracks.
 
-    # Get seed tracks from popular playlists of the genres
-    seed_genres = mood_config["genres"][:5]  # Spotify allows max 5 seed genres
+    NOTE: Spotify deprecated the /recommendations and restricted /audio-features endpoints
+    in Nov 2024 for new apps. This function now creates playlists directly from user's
+    top tracks based on the selected time range that best matches the mood.
+    """
 
-    # Build recommendation parameters
-    recommendations_params = {
-        "seed_genres": seed_genres,
-        "limit": limit,
-        "market": "US"
+    mood = mood.lower()
+
+    print(f"\n=== Creating '{mood}' playlist from user's favorite tracks ===")
+
+    # Map moods to time ranges for variety
+    # - Energetic: Recent tracks (user's current energy)
+    # - Calm: Long-term favorites (comfort/familiarity)
+    # - Introspective: Medium-term (reflective period)
+    # - Adventurous: Mix of short and long-term
+
+    mood_time_ranges = {
+        "energetic": "short_term",      # Last ~4 weeks
+        "calm": "long_term",             # All-time favorites
+        "introspective": "medium_term",  # Last ~6 months
+        "adventurous": "short_term",     # Recent discoveries
     }
 
-    # Add audio features based on mood
-    if "energy_min" in mood_config:
-        recommendations_params["min_energy"] = mood_config["energy_min"]
-    if "energy_max" in mood_config:
-        recommendations_params["max_energy"] = mood_config["energy_max"]
-    if "tempo_min" in mood_config:
-        recommendations_params["min_tempo"] = mood_config["tempo_min"]
-    if "tempo_max" in mood_config:
-        recommendations_params["max_tempo"] = mood_config["tempo_max"]
-    if "valence_min" in mood_config:
-        recommendations_params["min_valence"] = mood_config["valence_min"]
-    if "valence_max" in mood_config:
-        recommendations_params["max_valence"] = mood_config["valence_max"]
+    time_range = mood_time_ranges.get(mood, "medium_term")
 
-    # Get recommendations
-    recommendations = sp.recommendations(**recommendations_params)
+    # Fetch more tracks than we need to ensure variety
+    fetch_limit = min(limit * 2, 50)  # Spotify max is 50
 
+    try:
+        print(f"Fetching top {fetch_limit} tracks from {time_range} listening history...")
+        response = sp.current_user_top_tracks(limit=fetch_limit, time_range=time_range)
+        tracks_data = response.get("items", [])
+        print(f"✓ Found {len(tracks_data)} tracks")
+    except Exception as e:
+        print(f"✗ Error fetching tracks: {e}")
+        # Fallback to medium-term if primary fails
+        try:
+            print("Trying fallback to medium-term...")
+            response = sp.current_user_top_tracks(limit=fetch_limit, time_range="medium_term")
+            tracks_data = response.get("items", [])
+            print(f"✓ Fallback successful! Found {len(tracks_data)} tracks")
+        except Exception as fallback_error:
+            print(f"✗ Fallback failed: {fallback_error}")
+            return []
+
+    if not tracks_data:
+        print("✗ No tracks found in user's listening history")
+        return []
+
+    # Add some variety based on mood
+    # For adventurous mood, also mix in some long-term favorites
+    if mood == "adventurous" and len(tracks_data) < limit:
+        try:
+            print("Adding variety from long-term favorites...")
+            long_term_response = sp.current_user_top_tracks(limit=20, time_range="long_term")
+            long_term_tracks = long_term_response.get("items", [])
+
+            # Add tracks that aren't already in the list
+            existing_ids = {t["id"] for t in tracks_data}
+            for track in long_term_tracks:
+                if track["id"] not in existing_ids:
+                    tracks_data.append(track)
+                    existing_ids.add(track["id"])
+
+            print(f"✓ Added variety tracks. Total: {len(tracks_data)}")
+        except Exception as e:
+            print(f"Note: Could not add variety tracks: {e}")
+
+    # Shuffle for variety (deterministic based on mood)
+    import random
+    random.seed(hash(mood))  # Same mood = same shuffle order for consistency
+    shuffled = tracks_data.copy()
+    random.shuffle(shuffled)
+
+    # Select the requested number of tracks
+    selected = shuffled[:limit]
+
+    # Format tracks
     tracks = []
-    for track in recommendations['tracks']:
+    for t in selected:
         tracks.append({
-            "id": track['id'],
-            "name": track['name'],
-            "artist": ", ".join([artist['name'] for artist in track['artists']]),
-            "uri": track['uri'],
-            "duration_ms": track['duration_ms'],
-            "preview_url": track.get('preview_url'),
-            "album_image": track['album']['images'][0]['url'] if track['album']['images'] else None
+            "id": t["id"],
+            "name": t["name"],
+            "artists": [a["name"] for a in t["artists"]],
+            "duration": round(t["duration_ms"] / 60000, 2),
+            "preview_url": t.get("preview_url"),
+            "uri": t["uri"],
+            "image": t["album"]["images"][0]["url"] if t["album"]["images"] else None
         })
 
+    print(f"✓ Created playlist with {len(tracks)} tracks for '{mood}' mood\n")
     return tracks
 
 
-def create_playlist(sp, user_id: str, mood: str, tracks: list):
-    """Create a playlist on user's Spotify account"""
-    # Get current user info
-    current_user = sp.current_user()
-    spotify_user_id = current_user['id']
 
-    # Create playlist
-    playlist_name = f"Tripify - Your {mood.capitalize()} Vibe"
-    playlist_description = f"A personalized {mood} playlist created by Tripify based on your mood quiz"
+
+# -------------------------------------------------------------
+# CREATE PLAYLIST
+# -------------------------------------------------------------
+def create_playlist(sp, user_id: str, mood: str, tracks: list):
+    """Create playlist inside user's Spotify account"""
+
+    user = sp.current_user()
+    sp_user_id = user["id"]
+
+    playlist_name = f"Tripify – {mood.capitalize()} Mix"
+    playlist_description = f"A playlist generated based on your {mood} mood from Tripify."
 
     playlist = sp.user_playlist_create(
-        user=spotify_user_id,
+        user=sp_user_id,
         name=playlist_name,
         public=True,
         description=playlist_description
     )
 
-    # Add tracks to playlist
-    track_uris = [track['uri'] for track in tracks if 'uri' in track]
+    track_uris = [track["uri"] for track in tracks if track.get("uri")]
+
     if track_uris:
-        sp.playlist_add_items(playlist['id'], track_uris)
+        sp.playlist_add_items(playlist["id"], track_uris)
 
     return {
-        "playlist_id": playlist['id'],
+        "playlist_id": playlist["id"],
         "playlist_name": playlist_name,
-        "playlist_url": playlist['external_urls']['spotify'],
+        "playlist_url": playlist["external_urls"]["spotify"],
         "tracks_added": len(track_uris)
     }
+
