@@ -1,4 +1,3 @@
-// screens/QuizScreen.tsx
 import { useState } from "react";
 import {
   StyleSheet,
@@ -11,42 +10,44 @@ import {
 } from "react-native";
 import { quizQuestions } from "../Quiz/quiz-data";
 import { calculateMood } from "../services/quizService";
-
+ 
 export default function QuizScreen({ navigation, route }: any) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [loading, setLoading] = useState(false);
-
+ 
   // Get userId from route params (passed from login/signup)
   const userId = route?.params?.userId;
-
+  const userName = route?.params?.userName;
+ 
   const question = quizQuestions[currentQuestion];
   const isLastQuestion = currentQuestion === quizQuestions.length - 1;
   const isFirstQuestion = currentQuestion === 0;
-
+ 
   const handleSelectOption = (optionIndex: number) => {
     setAnswers({ ...answers, [currentQuestion]: optionIndex });
   };
-
+ 
   const handleNext = async () => {
     if (isLastQuestion) {
       // Submit quiz to backend and calculate mood
       setLoading(true);
       try {
         console.log("Submitting quiz answers:", answers);
-
+ 
         const moodResult = await calculateMood({
           userId: userId || "guest",
           answers: answers,
         });
-
+ 
         console.log("Mood calculation result:", moodResult);
-
+ 
         // Navigate to results screen with mood data
         navigation.navigate("Results", {
           answers,
           moodResult,
           userId: userId || "guest",
+          userName: userName || "User",
         });
       } catch (error) {
         console.error("Error submitting quiz:", error);
@@ -62,15 +63,15 @@ export default function QuizScreen({ navigation, route }: any) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
-
+ 
   const handleBack = () => {
     if (!isFirstQuestion) {
       setCurrentQuestion(currentQuestion - 1);
     }
   };
-
+ 
   const selectedOption = answers[currentQuestion];
-
+ 
   return (
     <View style={styles.container}>
       {/* Header with Progress */}
@@ -91,11 +92,11 @@ export default function QuizScreen({ navigation, route }: any) {
           />
         </View>
       </View>
-
+ 
       {/* Question and Options */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.question}>{question.question}</Text>
-
+ 
         <View style={styles.optionsContainer}>
           {question.options.map((option, index) => (
             <TouchableOpacity
@@ -119,7 +120,7 @@ export default function QuizScreen({ navigation, route }: any) {
           ))}
         </View>
       </ScrollView>
-
+ 
       {/* Navigation Buttons */}
       <View style={styles.navigationButtons}>
         <TouchableOpacity
@@ -140,7 +141,7 @@ export default function QuizScreen({ navigation, route }: any) {
             ← Back
           </Text>
         </TouchableOpacity>
-
+ 
         <TouchableOpacity
           style={[
             styles.navButton,
@@ -162,7 +163,7 @@ export default function QuizScreen({ navigation, route }: any) {
     </View>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,

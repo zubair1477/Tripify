@@ -4,16 +4,17 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
-
+ 
 import LoginScreen from "./screens/LoginScreen";
 import SignupScreen from "./screens/SignupScreen";
 import onboarding from "./screens/onboarding";
 import QuizScreen from "./screens/QuizScreen";
 import ResultsScreen from "./screens/ResultsScreen";
 import SpotifySuccessScreen from "./screens/SpotifySuccessScreen";
-
+import ProfileScreen from "./screens/ProfileScreen";
+ 
 const Stack = createNativeStackNavigator();
-
+ 
 // 🔥 Deep Linking Config
 const linking = {
   prefixes: ["http://localhost:8081"],
@@ -25,10 +26,11 @@ const linking = {
       Quiz: "quiz",
       Results: "results",
       SpotifySuccess: "SpotifySuccess", // MUST MATCH the URL path EXACTLY
+      Profile: "profile",
     },
   },
 };
-
+ 
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -46,13 +48,14 @@ export default function App() {
             name="SpotifySuccess"
             component={SpotifySuccessScreen}
           />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>
     </SafeAreaProvider>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
